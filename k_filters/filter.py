@@ -13,7 +13,7 @@ class BaseFilter:
 
         """
         Xf - Prior ensemble ( Nx x N_e )
-        HX -  Observations from model ( Ny x Ne )
+        HXf -  Observations from model ( Ny x Ne )
         Y -  Observations ( N_y x 1)
         R -  Observation error (uncorrelated, R is assumed diagonal) ( Ny x 1)
         """
