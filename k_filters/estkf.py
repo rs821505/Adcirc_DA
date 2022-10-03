@@ -26,16 +26,6 @@ class ESTKF(BaseFilter):
     - Analysis ensemble (N_x, N_e)
     """
     
-    
-    # Ne= Xf.shape[1]                                 # number of ensemble members
-    # Rmat=np.diag(R)                                 # Obs error matrix
-    # Rmat_inv=np.diag(1/R)
-    # Xmean = np.mean(Xf, axis=1)                     # Mean of prior ensemble for each state vector variable 
-    # Xfp=Xf-Xmean[:,None]                            # Perturbations from ensemble mean
-    # Ymean = np.mean(HXf, axis=1)                    # Mean of model values in observation space
-    # d=self.Y-self.HXf.mean(axis=1)
-
-
     def _assimilate(self):
         """
         Assimilate Data
@@ -63,7 +53,7 @@ class ESTKF(BaseFilter):
         A=np.ones((self.Ne,self.Ne-1))*off_diag
         np.fill_diagonal(A,diag)
         A[-1,:]=sqr_ne
-        
+
         return A
  
     def _analysis(self):
