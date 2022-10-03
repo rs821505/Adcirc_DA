@@ -1,5 +1,5 @@
 import numpy as np
-from filter import BaseFilter
+from k_filters import BaseFilter
 
 class EnSRF(BaseFilter):
     """
