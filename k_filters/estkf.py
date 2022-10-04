@@ -8,21 +8,6 @@ class ESTKF(BaseFilter):
     Implementation adapted from pseudocode description in
     "State-of-the-art stochastic data assimialation methods" by Vetra-Carvalho et al. (2018),
     algorithm 12, see section 5.9
-    Errors: 
-        5th line: A instead of L (A needs to be created)
-        Last line: W_A instead of W'
-    
-    Dimensions: N_e: ensemble size
-                N_y: Number of observations
-                 N_x: State vector size (Gridboxes x assimilated variables)
-    
-    Paramters:
-    param Xf:  the prior ensemble (N_x x N_y) 
-    param R: Measurement Error (assumed uncorrelated) (N_y x 1) -> converted to Ny x Ny matrix
-    param HX^f: Model value projected into observation space/at proxy locations (N_y x N_e)
-    param Y: Observation vector (N_y x 1)
-
-    Output:
     - Analysis ensemble (N_x, N_e)
     """
     
@@ -31,19 +16,18 @@ class ESTKF(BaseFilter):
         Assimilate Data
         """
 
-        Xfp, _, Xmean, _ = self._means()
+        xfp, _, xbar, _ = self._means()
 
-        Wa = self._analysis()
-        xa = self._update(Xmean,Xfp,Wa)
+        Wa = self._forecast()
+        xa = self._analysis(xbar,xfp,Wa)
 
         return xa
     
     def _projection_matrix(self):
         """
         Create projection matrix:
-        - create matrix of shape Ne x Ne-1 filled with off diagonal values
-        - fill diagonal with diagonal values
-        - replace values of last row
+        create matrix of shape Ne x Ne-1 filled with off diagonal values
+        fill diagonal with diagonal values then replace values of last row
         """
 
         sqr_ne=-1/np.sqrt(self.Ne)
@@ -56,17 +40,17 @@ class ESTKF(BaseFilter):
 
         return A
  
-    def _analysis(self):
+    def _forecast(self):
         """
-        Analysis Step
+        Forecast Step
         """
 
         A = self._projection_matrix()                   # get projection matrix
 
-        d=self.Y-self.HXf.mean(axis=1)                 # innovation vector
+        d=self.y-self.hxf.mean(axis=1)                 # innovation vector
 
         # error in pseudocode, replace L by A
-        HL=self.HXf.dot(A)
+        HL=self.hxf.dot(A)
         B1=np.diag(1/self.R).dot(HL)
         C1=(self.Ne-1)*np.identity(self.Ne-1)
         C2=C1+HL.T.dot(B1)
@@ -86,11 +70,11 @@ class ESTKF(BaseFilter):
 
         return Wa
 
-    def _update(self,Xmean,Xfp, Wa):
+    def _analysis(self,xbar,xfp, Wa):
         """
         Update Step
         """
-        Xa = Xmean[:,None] + Xfp.dot(Wa)   #Analysis ensemble
+        Xa = xbar[:,None] + xfp.dot(Wa)   #Analysis ensemble
 
         return Xa
 
