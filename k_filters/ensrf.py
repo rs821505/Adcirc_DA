@@ -18,7 +18,7 @@ class EnSRF(BaseFilter):
 
     def _assimilate(self):
         """
-        Todo
+        Assimilate Data
         """
         Rmat = self._obs_error_mat()
         Xfp, HXp, Xmean, Ymean = self._means()
@@ -31,7 +31,7 @@ class EnSRF(BaseFilter):
     
     def _analysis(self,HXp,Rmat,Ymean):
         """
-        Todo
+        Analysis Step
         """
 
         I1= np.matmul(HXp,HXp.T)                                        #Gram matrix of perturbations
@@ -65,7 +65,7 @@ class EnSRF(BaseFilter):
 
     def _update(self,Xmean,Xfp,W):
         """
-        Todo
+        Update Step
         """
         Xa= np.matmul(Xmean[:,None]+Xfp,W)
         return Xa
