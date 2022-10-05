@@ -33,7 +33,7 @@ class EnSRF(BaseFilter):
         G1= ev.dot( np.diag(np.sqrt(1/eigs)) )
         G2= hxp.T.dot(G1)
 
-        U,s,Vh=np.linalg.svd(G2)
+        U,s,_=np.linalg.svd(G2)
         
         #Compute  sqrt of matrix,
         rad=(np.ones(self.Ne)-np.square(s)).astype(complex)
