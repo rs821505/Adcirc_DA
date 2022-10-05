@@ -1,9 +1,9 @@
 import torch
 import numpy as np
-from k_filters  import BaseFilter
+from k_filters.filter_torch import BaseFilterTorch
 
 
-class ESTKF(BaseFilter):
+class ESTKFT(BaseFilterTorch):
     """
     Error-subspace transform Kalman Filter
     
@@ -39,8 +39,8 @@ class ESTKF(BaseFilter):
         off_diag = -1/(self.ne*(-inv_ne+1))
         diag = 1+off_diag
 
-        a = torch.ones((self.Ne,self.Ne-1))*off_diag
-        a.fill_diagonal(diag)
+        a = torch.ones((self.ne,self.ne-1),dtype=torch.float64)*off_diag
+        a.fill_diagonal_(diag)
         a[-1,:] = inv_ne
         return a
 
@@ -52,15 +52,13 @@ class ESTKF(BaseFilter):
         a = self._projection_matrix()                            # get projection matrix
         d = torch.sub(self.y,self.hxf.mean(axis=1))              # innovation vector
 
-  
         hl = self.hxf.matmul(a)
         b1 = torch.diag(1/self.r).matmul(hl)
         c1 = (self.ne-1)*torch.eye(self.ne-1)
         c2 = self.inf_fact*c1 + hl.t().matmul(b1)
         
-        
-        eigs,u=np.linalg.eigh(c2)                                  # evd of c2, assumed symmetric
-        
+        eigs,u = torch.linalg.eigh(c2)                                  # evd of c2, assumed symmetric
+
         d1 = b1.t().matmul(d)
         d2 = u.t().matmul(d1)
         d3 = d2/eigs
@@ -75,7 +73,7 @@ class ESTKF(BaseFilter):
 
     def _analysis(self,xbar,xfp, wa):
         """
-        Update Step
+        Update Step:
+        returns: xa: ensemble analysis 
         """
-        xa = xbar.unsqueeze_(1).add(xfp.matmul(wa))
-        return xa
+        return xbar.add(xfp.matmul(wa))

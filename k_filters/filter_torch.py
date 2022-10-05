@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 
-class BaseFilter:
+class BaseFilterTorch:
     """
     Base filter class representing a single data assimilation step
     Class contaings methods shared by all filters.
@@ -21,6 +21,7 @@ class BaseFilter:
         self.hxf = torch.from_numpy(hxf)
         self.y = torch.from_numpy(y)
         self.r = torch.from_numpy(r)
+        self.inf_fact = torch.tensor(1)
 
 
     def _get_shapes(self):
@@ -31,15 +32,18 @@ class BaseFilter:
          nx: State vector size (Gridboxes x assimilated variables)
          ny: Number of observations
         """
-        self.ny = self.y.shape[0]
-        self.nx, self.ne = self.xf.shape
+        
+        self.ne = torch.tensor(self.xf.shape[1])
+        self.nx = torch.tensor(self.xf.shape[0])
+        self.ny = torch.tensor(self.y.shape[0])
+       
 
     def _means(self):
         """
         returns: xfp: perturbations from ensemble mean
-                 hxp: observation standard error
-                 xbar: ensemble mean
-                 ybar: observations mean
+                hxp: observation standard error
+                xbar: ensemble mean
+                ybar: observations mean
         """                 
         xbar = self.xf.mean(axis=1)
         ybar = self.hxf.mean(axis=1)
