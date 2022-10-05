@@ -21,7 +21,7 @@ class EnSRF(BaseFilter):
     
     def _forecast(self,hxp,Rmat,ybar):
         """
-        Forecase Step
+        Forecast Step
         """
 
         I1= np.matmul(hxp,hxp.T)                                        #Gram matrix of perturbations
