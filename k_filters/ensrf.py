@@ -48,7 +48,6 @@ class EnSRF(BaseFilter):
         w2= np.diag(1/eigs).T.dot(w1)
         w3= ev.dot(w2)
         w4= hxp.T.dot(w3)
-        
         W=W2p+w4[:,None]
 
         return W

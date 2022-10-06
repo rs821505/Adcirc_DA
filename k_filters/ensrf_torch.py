@@ -23,7 +23,7 @@ class EnSRFT(BaseFilterTorch):
         w = self._forecast(hxp,rmat,ybar)
         xa = self._analysis(xbar,xfp,w)
 
-        return xa
+        return xa.numpy()
 
     
     def _forecast(self,hxp,rmat,ybar):
@@ -41,18 +41,19 @@ class EnSRFT(BaseFilterTorch):
 
         u,s,_= torch.linalg.svd(g2)
         
-        rad = (torch.ones(self.ne).sub(torch.square(s))).astype(complex)       # Compute  sqrt of matrix,
+     
+        rad = torch.ones(self.ne).sub(torch.square(s))    # Compute  sqrt of matrix,
+        rad.type(torch.complex64)
         a = torch.diag(torch.sqrt(rad))
 
         w1p = u.matmul(a)
         w2p = w1p.matmul(u.t())
-        d = self.y.sub(ybar)                                          # innovation vector
+        d = self.y.sub(ybar.squeeze_(1))                                          # innovation vector
 
         w1 = ev.t().matmul(d)
         w2 = torch.diag(1/eigs).t().matmul(w1)
         w3 = ev.matmul(w2)
         w4 = hxp.t().matmul(w3)
-        
         w = w2p.add(w4.unsqueeze_(1))
 
         return w
@@ -62,4 +63,4 @@ class EnSRFT(BaseFilterTorch):
         Update Step:
         returns: xa: ensemble analysis 
         """
-        return xbar.unsqueeze_(1).add(xfp).matmul(w)
+        return xbar.add(xfp).matmul(w)

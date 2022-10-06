@@ -1,5 +1,6 @@
 import numpy as np
 from k_filters import BaseFilter
+import time
 
 
 class SEnKF(BaseFilter):
@@ -19,6 +20,7 @@ class SEnKF(BaseFilter):
 
         A, D = self._forecast(hxp, Rmat)
         xa = self._analysis(A,D,xfp,hxp)
+
         return xa
 
 
@@ -27,12 +29,14 @@ class SEnKF(BaseFilter):
         Forecast Step
         """
 
+        np.random.seed(42)
+        
         HPH= hxp@ hxp.T /(self.Ne-1)
 
         A= HPH + Rmat
 
-        rng = np.random.default_rng(seed=42)
-        y_p=rng.standard_normal((self.Ny, self.Ne))*np.sqrt(self.R)[:,None]
+       
+        y_p= np.random.standard_normal((self.Ny, self.Ne))*np.sqrt(self.R)[:,None]
 
         D= self.y[:,None]+y_p - self.hxf
 

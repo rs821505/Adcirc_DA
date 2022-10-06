@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import time
 
 from k_filters.filter_torch import BaseFilterTorch
 
@@ -19,7 +20,6 @@ class SEnKFT(BaseFilterTorch):
 
         returns: xa: ensemble analysis 
         """
-
         self._get_shapes()
         rmat = self._obs_error_mat()
         xfp, hxp, _, _ = self._means()
@@ -27,14 +27,14 @@ class SEnKFT(BaseFilterTorch):
         a, d = self._forecast(hxp, rmat)
         xa = self._analysis(a,d,xfp,hxp)
 
-        return xa
+        return xa.numpy()
 
 
     def _forecast(self,hxp,rmat):
         """
         Forecast Step
         """
-        torch.manual_seed(40)
+        torch.manual_seed(42)
 
         hph= hxp.matmul(hxp.T) /(self.ne-1)
 
