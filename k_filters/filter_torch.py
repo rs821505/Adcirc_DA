@@ -17,13 +17,21 @@ class BaseFilterTorch:
         :param y:   measurements/observations  ( ny x 1)
         :param r:   observation error (uncorrelated, r is assumed diagonal) ( ny x 1)
         """
-        self.xf = torch.from_numpy(xf)
-        self.hxf = torch.from_numpy(hxf)
-        self.y = torch.from_numpy(y)
-        self.r = torch.from_numpy(r)
+        self.device = torch.device("cuda" if torch.cuda.is_available()else "cpu")
+        self.xf = self._to_torch(xf.copy())
+        self.hxf = self._to_torch(hxf.copy())
+        self.y = self._to_torch(y.copy())
+        self.r = self._to_torch(r.copy())
         self.inf_fact = torch.tensor(1)
 
 
+        
+    def _to_torch(self, nparray):
+        """
+        Convert numpy array to torch tensor
+        """
+        return torch.as_tensor(nparray,device=self.device, dtype=torch.float32)
+        
     def _get_shapes(self):
         """
         Dimensions:
