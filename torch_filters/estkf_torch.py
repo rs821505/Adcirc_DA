@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from k_filters.filter_torch import BaseFilterTorch
+import BaseFilterTorch
 
 
 class ESTKFT(BaseFilterTorch):

@@ -1,8 +1,7 @@
 import torch
 import numpy as np
 import time
-
-from k_filters.filter_torch import BaseFilterTorch
+import BaseFilterTorch
 
 
 class SEnKFT(BaseFilterTorch):
