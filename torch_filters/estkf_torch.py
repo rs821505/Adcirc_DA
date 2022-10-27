@@ -1,6 +1,7 @@
 import torch
 import numpy as np
-import BaseFilterTorch
+from .filter_torch import BaseFilterTorch
+
 
 
 class ESTKFT(BaseFilterTorch):
@@ -39,7 +40,7 @@ class ESTKFT(BaseFilterTorch):
         off_diag = -1/(self.ne*(-inv_ne+1))
         diag = 1+off_diag
 
-        a = torch.ones((self.ne,self.ne-1),dtype=torch.float64)*off_diag
+        a = torch.ones((self.ne,self.ne-1),dtype=torch.float32)*off_diag
         a.fill_diagonal_(diag)
         a[-1,:] = inv_ne
         return a

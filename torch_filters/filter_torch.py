@@ -8,7 +8,7 @@ class BaseFilterTorch:
     Class contaings methods shared by all filters.
     """
 
-    def __init__(self,xf, hxf, y, r):
+    def __init__(self,xf, hxf, y):
         """
         Parameters:
         -------------
@@ -21,8 +21,8 @@ class BaseFilterTorch:
         self.xf = self._to_torch(xf.copy())
         self.hxf = self._to_torch(hxf.copy())
         self.y = self._to_torch(y.copy())
-        self.r = self._to_torch(r.copy())
-        self.inf_fact = torch.tensor(1)
+        self.r = 0.5 * torch.ones(y.size)
+        self.inf_fact = torch.tensor(1.65)
 
 
         
