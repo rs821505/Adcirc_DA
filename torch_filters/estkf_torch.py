@@ -24,10 +24,10 @@ class ESTKFT(BaseFilterTorch):
         self._get_shapes()
         xfp, _, xbar, _ = self._means()
 
-        wa = self._forecast()
+        wa,cv = self._forecast()
         xa = self._analysis(xbar,xfp,wa)
 
-        return xa.numpy()
+        return xa.numpy(), cv.numpy()
 
     def _projection_matrix(self):
         """
@@ -70,7 +70,7 @@ class ESTKFT(BaseFilterTorch):
         w = wm.unsqueeze_(1).add(wp)                                 # total weight matrix + projection matrix transform
         wa = a.matmul(w)                                               
 
-        return wa
+        return wa,c2
 
     def _analysis(self,xbar,xfp, wa):
         """
