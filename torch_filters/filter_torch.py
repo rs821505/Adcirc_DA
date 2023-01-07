@@ -8,7 +8,7 @@ class BaseFilterTorch:
     Class contaings methods shared by all filters.
     """
 
-    def __init__(self,xf, hxf, y):
+    def __init__(self, xf, hxf, y):
         """
         Parameters:
         -------------
@@ -17,21 +17,19 @@ class BaseFilterTorch:
         :param y:   measurements/observations  ( ny x 1)
         :param r:   observation error (uncorrelated, r is assumed diagonal) ( ny x 1)
         """
-        self.device = torch.device("cuda" if torch.cuda.is_available()else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.xf = self._to_torch(xf.copy())
         self.hxf = self._to_torch(hxf.copy())
         self.y = self._to_torch(y.copy())
         self.r = 0.5 * torch.ones(y.size)
         self.inf_fact = torch.tensor(1.65)
 
-
-        
     def _to_torch(self, nparray):
         """
         Convert numpy array to torch tensor
         """
-        return torch.as_tensor(nparray,device=self.device, dtype=torch.float32)
-        
+        return torch.as_tensor(nparray, device=self.device, dtype=torch.float32)
+
     def _get_shapes(self):
         """
         Dimensions:
@@ -40,11 +38,10 @@ class BaseFilterTorch:
          nx: State vector size (Gridboxes x assimilated variables)
          ny: Number of observations
         """
-        
+
         self.ne = torch.tensor(self.xf.shape[1])
         self.nx = torch.tensor(self.xf.shape[0])
         self.ny = torch.tensor(self.y.shape[0])
-       
 
     def _means(self):
         """
@@ -52,13 +49,18 @@ class BaseFilterTorch:
                 hxp: observation standard error
                 xbar: ensemble mean
                 ybar: observations mean
-        """                 
+        """
         xbar = self.xf.mean(axis=1)
         ybar = self.hxf.mean(axis=1)
-        return self.xf.sub(xbar.unsqueeze_(1)),  self.hxf.sub(ybar.unsqueeze_(1)), xbar, ybar
+        return (
+            self.xf.sub(xbar.unsqueeze_(1)),
+            self.hxf.sub(ybar.unsqueeze_(1)),
+            xbar,
+            ybar,
+        )
 
-    def _obs_error_mat(self): 
+    def _obs_error_mat(self):
         """
         returns: r: observation covariance matrix
-        """    
+        """
         return torch.diag(self.r)

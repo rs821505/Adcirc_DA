@@ -1,63 +1,85 @@
 import numpy as np
-from k_filters import BaseFilter
+from k_filters import base_filter
 
-class EnSRF(BaseFilter):
-    """
-    Ensemble Square Root Filter
+
+class ensrf(base_filter):
+    """Implementation adapted from pseudocode description in
+    "State-of-the-art stochastic data assimialation methods" by Vetra-Carvalho et al. (2018),
+    algorithm 9, see section 5.6. Pseudocode has some errors, eg. in step 7 it should be sqrt(Lambda).
+
+    Parameters
+    ----------
+    base_filter : object
+        parent class to all ensemble type filters in the directory
     """
 
     def _assimilate(self):
+        """Main run method that calls the typical forecast and anlysis steps
+            of the ensemble kalman filter algorithm
+
+        Returns
+        -------
+        np.ndarray
+            state (analysis/posterior) vector
         """
-        Assimilate Data
+        self.means()
+        self.obs_cov_mat = self._obs_error_mat()
+
+        w = self._forecast()
+        state_analysis = self._analysis(w)
+
+        return state_analysis
+
+    def _forecast(self):
+        """Forecast/apriori or first guess step in the ensemble kalman filter algorithm
+
+        Returns
+        -------
+        np.ndarray
+            weight vector
         """
-        Rmat = self._obs_error_mat()
-        xfp, hxp, xbar, ybar = self._means()
 
-        W = self._forecast(hxp,Rmat,ybar)
-        xa = self._analysis(xbar,xfp,W)
+        i1 = np.matmul(
+            self.zero_mean_observations, self.zero_mean_observations.T
+        )  # Gram matrix of perturbations
+        i2 = i1 + (self.ne - 1) * self.obs_cov_mat
+        eigs, ev = np.linalg.eigh(
+            i2
+        )  # compute eigenvalues and eigenvectors (use that matrix is symmetric and real)
 
-        return xa
+        # Error in Pseudocode: Square Root + multiplication order
+        g1 = ev.dot(np.diag(np.sqrt(1 / eigs)))
+        g2 = self.zero_mean_observations.T.dot(g1)
 
-    
-    def _forecast(self,hxp,Rmat,ybar):
+        u, s, _ = np.linalg.svd(g2)
+
+        # Compute sqrt of matrix,
+        rad = np.sqrt((np.ones(self.ne) - np.square(s)).astype(complex))
+        a = np.diag(rad)
+
+        w1p = u.dot(a)
+        w2p = w1p.dot(u.T)
+        d = np.subtract(self.y, self.observation_mean)
+
+        w1 = ev.T.dot(d)
+        w2 = np.diag(1 / eigs).T.dot(w1)
+        w3 = ev.dot(w2)
+        w4 = self.zero_mean_observations.T.dot(w3)
+        w = w2p + w4[:, None]
+
+        return w
+
+    def _analysis(self, w):
+        """Analysis/posterior or best guess in the ensemble kalman filter algorithm
+
+        Parameters
+        ----------
+        wa : np.ndarray
+            weight vector
+
+        Returns
+        -------
+        np.ndarray
+            state analysis/aposterior vector
         """
-        Forecast Step
-        """
-
-        I1= np.matmul(hxp,hxp.T)                                        #Gram matrix of perturbations
-        I2=I1+(self.Ne-1)*Rmat
-
-        eigs, ev = np.linalg.eigh(I2)                                   #compute eigenvalues and eigenvectors (use that matrix is symmetric and real)
-
-        #Error in Pseudocode: Square Root + multiplication order 
-        G1= ev.dot( np.diag(np.sqrt(1/eigs)) )
-        G2= hxp.T.dot(G1)
-
-        U,s,_=np.linalg.svd(G2)
-        
-        #Compute  sqrt of matrix,
-        rad=(np.ones(self.Ne)-np.square(s)).astype(complex)
-        rad=np.sqrt(rad)
-        A=np.diag(rad)
-
-        W1p= U.dot(A)
-        W2p= W1p.dot(U.T)
-        d= np.subtract(self.y,ybar)
-
-        w1= ev.T.dot(d)
-        w2= np.diag(1/eigs).T.dot(w1)
-        w3= ev.dot(w2)
-        w4= hxp.T.dot(w3)
-        W=W2p+w4[:,None]
-
-        return W
-
-    def _analysis(self,xbar,xfp,W):
-        """
-        Update Step
-        """
-        Xa= np.matmul(xbar[:,None]+xfp,W)
-        return Xa
-
-
-
+        return np.matmul(self.state_mean[:, None] + self.zero_mean_state, w)

@@ -1,54 +1,74 @@
 import numpy as np
-from k_filters import BaseFilter
-import time
+from k_filters import base_filter
 
 
-class SEnKF(BaseFilter):
+class senkf(base_filter):
     """
     Stochastic Ensemble Kalman Filter
     Implementation adapted from pseudocode description in
     "State-of-the-art stochastic data assimialation methods" by Vetra-Carvalho et al. (2018),
     """
- 
+
     def _assimilate(self):
+        """Main run method that calls the typical forecast and anlysis steps
+            of the ensemble kalman filter algorithm
+
+        Returns
+        -------
+        np.ndarray
+            state (analysis/posterior) vector
         """
-        Assimilate Data
-        """
 
-        Rmat = self._obs_error_mat()
-        xfp, hxp, _, _ = self._means()
+        self.means()
+        self.obs_cov_mat = self._obs_error_mat()
 
-        A, D = self._forecast(hxp, Rmat)
-        xa = self._analysis(A,D,xfp,hxp)
+        obs_anomaly_estimate, residual = self._forecast()
+        state_analysis = self._analysis(obs_anomaly_estimate, residual)
 
-        return xa
+        return state_analysis
 
+    def _forecast(self):
+        """Forecast/apriori or first guess step in the ensemble kalman filter algorithm
 
-    def _forecast(self,hxp,Rmat):
-        """
-        Forecast Step
+        Returns
+        -------
+        np.ndarray
+            weight vector
         """
 
         np.random.seed(42)
-        
-        HPH= hxp@ hxp.T /(self.Ne-1)
 
-        A= HPH + Rmat
+        forecast_error_covariance = (
+            self.zero_mean_observations @ self.zero_mean_observations.T / (self.ne - 1)
+        )
+        obs_anomaly_estimate = forecast_error_covariance + self.obs_cov_mat
+        perturbed_observations = (
+            np.random.standard_normal((self.ny, self.ne))
+            * np.sqrt(self.obs_covariance)[:, None]
+        )
+        residual = self.y[:, None] + perturbed_observations - self.model_observations
 
-       
-        y_p= np.random.standard_normal((self.Ny, self.Ne))*np.sqrt(self.R)[:,None]
+        return obs_anomaly_estimate, residual
 
-        D= self.y[:,None]+y_p - self.hxf
+    def _analysis(self, obs_anomaly_estimate, residual):
+        """Analysis/posterior or best guess in the ensemble kalman filter algorithm
 
-        return A, D
-    
-    def _analysis(self, A, D, xfp, hxp):
+        Parameters
+        ----------
+        obs_anomaly_estimate : np.ndarray
+            observation anomaly estimate matrix; sample estimate of HP^fH^T matrix
+        residual : np.ndarray
+            residual vector
+
+        Returns
+        -------
+        np.ndarray
+            state analysis/aposterior vector
         """
-        Analysis Step
-        """
-        # solve linear system for getting inverse
-        C=np.linalg.solve(A,D)
-        E= hxp.T @ C
-        Xa=self.xf + xfp@(E/(self.Ne-1))
 
-        return Xa
+        gain_residual = (
+            self.zero_mean_observations.T
+            @ np.linalg.solve(obs_anomaly_estimate, residual)
+        ) / (self.ne - 1)
+
+        return self.state_forecast + self.zero_mean_state @ gain_residual
