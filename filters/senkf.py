@@ -45,21 +45,21 @@ class senkf(base_filter):
         forecast_error_covariance = (
             self.centered_observations @ self.centered_observations.T / (self.ne - 1)
         )
-        obs_anomaly_estimate = forecast_error_covariance + self.obs_cov_mat
+        residual_covariance = forecast_error_covariance + self.obs_cov_mat
         perturbed_observations = (
             np.random.standard_normal((self.ny, self.ne))
             * np.sqrt(self.obs_covariance)[:, None]
         )
         residual = self.y[:, None] + perturbed_observations - self.model_observations
 
-        return obs_anomaly_estimate, residual
+        return residual_covariance, residual
 
     def _analysis(self, obs_anomaly_estimate, residual):
         """Analysis/posterior or best guess in the ensemble kalman filter algorithm
 
         Parameters
         ----------
-        obs_anomaly_estimate : np.ndarray
+        residual_covariance: np.ndarray
             observation anomaly estimate matrix; sample estimate of HP^fH^T matrix
         residual : np.ndarray
             residual vector
