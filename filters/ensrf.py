@@ -40,7 +40,7 @@ class ensrf(base_filter):
         """
 
         i1 = np.matmul(
-            self.zero_mean_observations, self.zero_mean_observations.T
+            self.centered_observations, self.centered_observations.T
         )  # Gram matrix of perturbations
         i2 = i1 + (self.ne - 1) * self.obs_cov_mat
         eigs, ev = np.linalg.eigh(
@@ -49,7 +49,7 @@ class ensrf(base_filter):
 
         # Error in Pseudocode: Square Root + multiplication order
         g1 = ev.dot(np.diag(np.sqrt(1 / eigs)))
-        g2 = self.zero_mean_observations.T.dot(g1)
+        g2 = self.centered_observations.T.dot(g1)
 
         u, s, _ = np.linalg.svd(g2)
 
@@ -64,7 +64,7 @@ class ensrf(base_filter):
         w1 = ev.T.dot(d)
         w2 = np.diag(1 / eigs).T.dot(w1)
         w3 = ev.dot(w2)
-        w4 = self.zero_mean_observations.T.dot(w3)
+        w4 = self.centered_observations.T.dot(w3)
         w = w2p + w4[:, None]
 
         return w
@@ -82,4 +82,4 @@ class ensrf(base_filter):
         np.ndarray
             state analysis/aposterior vector
         """
-        return np.matmul(self.state_mean[:, None] + self.zero_mean_state, w)
+        return np.matmul(self.state_mean[:, None] + self.centered_state_forecasts, w)

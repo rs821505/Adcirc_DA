@@ -3,10 +3,14 @@ from k_filters import base_filter
 
 
 class senkf(base_filter):
-    """
-    Stochastic Ensemble Kalman Filter
+    """Stochastic Ensemble Kalman Filter
     Implementation adapted from pseudocode description in
     "State-of-the-art stochastic data assimialation methods" by Vetra-Carvalho et al. (2018),
+
+    Parameters
+    ----------
+    base_filter : object
+        parent class to all ensemble type filters in the directory
     """
 
     def _assimilate(self):
@@ -39,7 +43,7 @@ class senkf(base_filter):
         np.random.seed(42)
 
         forecast_error_covariance = (
-            self.zero_mean_observations @ self.zero_mean_observations.T / (self.ne - 1)
+            self.centered_observations @ self.centered_observations.T / (self.ne - 1)
         )
         obs_anomaly_estimate = forecast_error_covariance + self.obs_cov_mat
         perturbed_observations = (
@@ -67,8 +71,8 @@ class senkf(base_filter):
         """
 
         gain_residual = (
-            self.zero_mean_observations.T
+            self.centered_observations.T
             @ np.linalg.solve(obs_anomaly_estimate, residual)
         ) / (self.ne - 1)
 
-        return self.state_forecast + self.zero_mean_state @ gain_residual
+        return self.state_forecast + self.centered_state_forecasts @ gain_residual
