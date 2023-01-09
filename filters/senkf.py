@@ -1,5 +1,5 @@
 import numpy as np
-from k_filters import base_filter
+from Base_Filter import base_filter
 
 
 class senkf(base_filter):
@@ -50,7 +50,11 @@ class senkf(base_filter):
             np.random.standard_normal((self.ny, self.ne))
             * np.sqrt(self.obs_covariance)[:, None]
         )
-        residual = self.y[:, None] + perturbed_observations - self.model_observations
+        residual = (
+            self.observations[:, None]
+            + perturbed_observations
+            - self.model_observations
+        )
 
         return residual_covariance, residual
 

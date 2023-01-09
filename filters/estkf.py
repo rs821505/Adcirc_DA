@@ -1,5 +1,5 @@
 import numpy as np
-from k_filters import BaseFilter
+from Base_Filter import base_filter
 
 
 class estkf(base_filter):
@@ -24,8 +24,8 @@ class estkf(base_filter):
         np.ndarray
             state (analysis/posterior) vector
         """
-
-        self._means()
+        self.get_shape()
+        self.get_means()
         wa = self._forecast()
         state_analysis = self._analysis(wa)
 

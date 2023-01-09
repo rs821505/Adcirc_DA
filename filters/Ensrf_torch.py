@@ -1,8 +1,10 @@
+import torch
 import numpy as np
-from Base_Filter import base_filter
+
+from Base_Filter_Torch import base_filter_torch
 
 
-class ensrf(base_filter):
+class ensrf_torch(base_filter_torch):
     """Implementation adapted from pseudocode description in
     "State-of-the-art stochastic data assimialation methods" by Vetra-Carvalho et al. (2018),
     algorithm 9, see section 5.6. Pseudocode has some errors, eg. in step 7 it should be sqrt(Lambda).
@@ -19,53 +21,58 @@ class ensrf(base_filter):
 
         Returns
         -------
-        np.ndarray
+        torch.Tensor
             state (analysis/posterior) vector
         """
-        self.means()
+
+        self.get_shapes()
+        self.r = 0.5 * torch.ones(self.ny)
         self.obs_cov_mat = self._obs_error_mat()
+        self.get_means()
 
         w = self._forecast()
         state_analysis = self._analysis(w)
 
-        return state_analysis
+        return state_analysis.numpy()
 
     def _forecast(self):
         """Forecast/apriori or first guess step in the ensemble kalman filter algorithm
 
         Returns
         -------
-        np.ndarray
+        torch.Tensor
             weight vector
         """
 
-        i1 = np.matmul(
-            self.centered_observations, self.centered_observations.T
-        )  # Gram matrix of perturbations
+        i1 = self.centered_observations.matmul(
+            self.centered_observations.t()
+        )  # gram matrix of perturbations
         i2 = i1 + (self.ne - 1) * self.obs_cov_mat
-        eigs, ev = np.linalg.eigh(
+
+        eigs, ev = torch.linalg.eigh(
             i2
         )  # compute eigenvalues and eigenvectors (use that matrix is symmetric and real)
 
-        # Error in Pseudocode: Square Root + multiplication order
-        g1 = ev.dot(np.diag(np.sqrt(1 / eigs)))
-        g2 = self.centered_observations.T.dot(g1)
+        g1 = ev.matmul(torch.diag(torch.sqrt(1 / eigs)))
+        g2 = self.centered_observations.t().matmul(g1)
 
-        u, s, _ = np.linalg.svd(g2)
+        u, s, _ = torch.linalg.svd(g2)
 
-        # Compute sqrt of matrix,
-        rad = np.sqrt((np.ones(self.ne) - np.square(s)).astype(complex))
-        a = np.diag(rad)
+        rad = torch.ones(self.ne).sub(torch.square(s))  # Compute  sqrt of matrix,
+        rad.type(torch.complex64)
+        a = torch.diag(torch.sqrt(rad))
 
-        w1p = u.dot(a)
-        w2p = w1p.dot(u.T)
-        residual = np.subtract(self.observations, self.observation_mean)
+        w1p = u.matmul(a)
+        w2p = w1p.matmul(u.t())
+        residual = self.observations.sub(
+            self.observation_mean.squeeze_(1)
+        )  # innovation vector
 
-        w1 = ev.T.dot(residual)
-        w2 = np.diag(1 / eigs).T.dot(w1)
-        w3 = ev.dot(w2)
-        w4 = self.centered_observations.T.dot(w3)
-        w = w2p + w4[:, None]
+        w1 = ev.t().matmul(residual)
+        w2 = torch.diag(1 / eigs).t().matmul(w1)
+        w3 = ev.matmul(w2)
+        w4 = self.centered_observations.t().matmul(w3)
+        w = w2p.add(w4.unsqueeze_(1))
 
         return w
 
@@ -74,12 +81,12 @@ class ensrf(base_filter):
 
         Parameters
         ----------
-        wa : np.ndarray
+        wa : torch.Tensor
             weight vector
 
         Returns
         -------
-        np.ndarray
-            state analysis/aposterior vector
+        torch.Tensor
+
         """
-        return np.matmul(self.state_mean[:, None] + self.centered_state_forecasts, w)
+        return self.state_mean.add(self.centered_state_forecasts).matmul(w)
