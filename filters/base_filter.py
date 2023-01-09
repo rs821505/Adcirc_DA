@@ -15,7 +15,7 @@ class base_filter:
     obs_covariance: np.ndarray = None
     inf_fact: float = 1.65
 
-    def get_shape(self):
+    def get_shapes(self):
         """Get shapes for data assimilation
 
         Returns

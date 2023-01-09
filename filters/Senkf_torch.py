@@ -5,59 +5,81 @@ from Base_Filter_Torch import base_filter_torch
 
 
 class senkf_torch(base_filter_torch):
-    """
-    Stochastic Ensemble Kalman Filter
+    """Stochastic Ensemble Kalman Filter
     Implementation adapted from pseudocode description in
     "State-of-the-art stochastic data assimialation methods" by Vetra-Carvalho et al. (2018),
+
+    Parameters
+    ----------
+    base_filter : object
+        parent class to all ensemble type filters in the directory
     """
 
     def _assimilate(self):
-        """
-        Assimilate data
-        obtain model dimensions, state and obseervation statistics,
-        and run forecasting and analysis steps
+        """Main run method that calls the typical forecast and anlysis steps
+            of the ensemble kalman filter algorithm
 
-        returns: state_analysis: ensemble analysis
+        Returns
+        -------
+        torch.Tensor
+            state (analysis/posterior) vector
         """
         self.get_shapes()
         self.r = 0.5 * torch.ones(self.ny)
         self.obs_cov_mat = self._obs_error_mat()
         self.get_means()
 
-        a, residual = self._forecast(self.centered_observations, self.obs_cov_mat)
-        state_analysis = self._analysis(
-            a, residual, self.centered_state_forecasts, self.centered_observations
-        )
+        residual_covariance, residual = self._forecast()
+        state_analysis = self._analysis(residual_covariance, residual)
 
         return state_analysis.numpy()
 
     def _forecast(self):
+        """Forecast/apriori or first guess step in the ensemble kalman filter algorithm
+
+        Returns
+        -------
+        torch.Tensor
+            weight vector
         """
-        Forecast Step
-        """
+
         torch.manual_seed(42)
 
-        hph = self.centered_observations.matmul(self.centered_observations.T) / (
-            self.ne - 1
+        forecast_error_covariance = self.centered_observations.matmul(
+            self.centered_observations.T
+        ) / (self.ne - 1)
+
+        residual_covariance = forecast_error_covariance.add(self.obs_cov_mat)
+
+        perturbed_observations = torch.randn(
+            (self.ny, self.ne), dtype=torch.float64
+        ) * torch.sqrt(self.obs_covariance).unsqueeze_(1)
+
+        residual = self.observations.unsqueeze_(1).add(
+            perturbed_observations.sub(self.model_observations)
         )
 
-        a = hph.add(self.obs_cov_mat)
+        return residual_covariance, residual
 
-        y_p = torch.randn((self.ny, self.ne), dtype=torch.float64) * torch.sqrt(
-            self.obs_covariance
-        ).unsqueeze_(1)
+    def _analysis(self, residual_covariance, residual):
+        """Analysis/posterior or best guess in the ensemble kalman filter algorithm
 
-        residual = self.observations.unsqueeze_(1).add(y_p.sub(self.model_observations))
+        Parameters
+        ----------
+        residual_covariance: torch.Tensor
+            residual_covariance matrix; sample estimate of HP^fH^T matrix
+        residual : np.torch.Tensor
+            residual vector
 
-        return a, residual
-
-    def _analysis(self, a, residual):
+        Returns
+        -------
+        torch.Tensor
+            state analysis/aposterior vector
         """
-        Analysis Step
-        returns: state_analysis: ensemble analysis
-        """
 
-        e = self.centered_observations.t().matmul(torch.linalg.solve(a, residual))
+        e = self.centered_observations.t().matmul(
+            torch.linalg.solve(residual_covariance, residual)
+        )
 
         return self.state_forecast.add(
             self.centered_state_forecasts.matmul((e / (self.ne - 1)))

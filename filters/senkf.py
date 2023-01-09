@@ -22,12 +22,13 @@ class senkf(base_filter):
         np.ndarray
             state (analysis/posterior) vector
         """
-
+        self.get_shapes()
+        self.obs_covariance = 0.5 * np.ones(self.ny)
         self.means()
         self.obs_cov_mat = self._obs_error_mat()
 
-        obs_anomaly_estimate, residual = self._forecast()
-        state_analysis = self._analysis(obs_anomaly_estimate, residual)
+        residual_covariance, residual = self._forecast()
+        state_analysis = self._analysis(residual_covariance, residual)
 
         return state_analysis
 
@@ -45,7 +46,9 @@ class senkf(base_filter):
         forecast_error_covariance = (
             self.centered_observations @ self.centered_observations.T / (self.ne - 1)
         )
+
         residual_covariance = forecast_error_covariance + self.obs_cov_mat
+
         perturbed_observations = (
             np.random.standard_normal((self.ny, self.ne))
             * np.sqrt(self.obs_covariance)[:, None]
@@ -58,7 +61,7 @@ class senkf(base_filter):
 
         return residual_covariance, residual
 
-    def _analysis(self, obs_anomaly_estimate, residual):
+    def _analysis(self, residual_covariance, residual):
         """Analysis/posterior or best guess in the ensemble kalman filter algorithm
 
         Parameters
@@ -76,7 +79,7 @@ class senkf(base_filter):
 
         gain_residual = (
             self.centered_observations.T
-            @ np.linalg.solve(obs_anomaly_estimate, residual)
+            @ np.linalg.solve(residual_covariance, residual)
         ) / (self.ne - 1)
 
         return self.state_forecast + self.centered_state_forecasts @ gain_residual

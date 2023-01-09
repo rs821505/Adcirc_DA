@@ -22,6 +22,8 @@ class ensrf(base_filter):
         np.ndarray
             state (analysis/posterior) vector
         """
+        self.get_shapes()
+        self.obs_covariance = 0.5 * np.ones(self.ny)
         self.means()
         self.obs_cov_mat = self._obs_error_mat()
 

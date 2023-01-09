@@ -24,8 +24,10 @@ class estkf(base_filter):
         np.ndarray
             state (analysis/posterior) vector
         """
-        self.get_shape()
+        self.get_shapes()
+        self.obs_covariance = 0.5 * np.ones(self.ny)
         self.get_means()
+
         wa = self._forecast()
         state_analysis = self._analysis(wa)
 
@@ -33,7 +35,7 @@ class estkf(base_filter):
 
     def _projection_matrix(self):
         """Create projection matrix:
-        create matrix of shape Ne x Ne-1 filled with off diagonal values
+        create matrix of shape ne x ne-1 filled with off diagonal values
         fill diagonal with diagonal values then replace values of last row
 
         Returns
