@@ -31,7 +31,7 @@ class estkf_torch(base_filter_torch):
         )
 
         self.get_shapes()
-        self.obs_covariance = 0.5 * torch.ones(self.ny)
+        self.obs_covariance = 0.1 * torch.ones(self.ny)
         self.get_means()
 
         wa, cv = self._forecast()

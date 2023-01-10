@@ -28,7 +28,7 @@ class senkf_torch(base_filter_torch):
             self.state_forecast, self.model_observations, self.observations
         )
         self.get_shapes()
-        self.obs_covariance = 0.5 * torch.ones(self.ny)
+        self.obs_covariance = 0.1 * torch.ones(self.ny)
         self.obs_cov_mat = self._obs_error_mat()
         self.get_means()
 

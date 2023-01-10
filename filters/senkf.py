@@ -23,7 +23,7 @@ class senkf(base_filter):
             state (analysis/posterior) vector
         """
         self.get_shapes()
-        self.obs_covariance = 0.5 * np.ones(self.ny)
+        self.obs_covariance = 0.1 * np.ones(self.ny)
         self.get_means()
         self.obs_cov_mat = self.observation_cov_matrix()
 
