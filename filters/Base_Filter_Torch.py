@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(order=True)
