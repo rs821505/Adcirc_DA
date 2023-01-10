@@ -25,8 +25,12 @@ class ensrf_torch(base_filter_torch):
             state (analysis/posterior) vector
         """
 
+        self.parameters_torch(
+            self.state_forecast, self.model_observations, self.observations
+        )
+
         self.get_shapes()
-        self.r = 0.5 * torch.ones(self.ny)
+        self.obs_covariance = 0.5 * torch.ones(self.ny)
         self.obs_cov_mat = self._obs_error_mat()
         self.get_means()
 
@@ -65,7 +69,7 @@ class ensrf_torch(base_filter_torch):
         w1p = u.matmul(a)
         w2p = w1p.matmul(u.t())
         residual = self.observations.sub(
-            self.observation_mean.squeeze_(1)
+            self.model_observation_mean.squeeze_(1)
         )  # innovation vector
 
         w1 = ev.t().matmul(residual)

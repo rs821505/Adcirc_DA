@@ -24,8 +24,8 @@ class ensrf(base_filter):
         """
         self.get_shapes()
         self.obs_covariance = 0.5 * np.ones(self.ny)
-        self.means()
-        self.obs_cov_mat = self._obs_error_mat()
+        self.get_means()
+        self.obs_cov_mat = self.observation_cov_matrix()
 
         w = self._forecast()
         state_analysis = self._analysis(w)
@@ -61,7 +61,7 @@ class ensrf(base_filter):
 
         w1p = u.dot(a)
         w2p = w1p.dot(u.T)
-        residual = np.subtract(self.observations, self.observation_mean)
+        residual = np.subtract(self.observations, self.model_observation_mean)
 
         w1 = ev.T.dot(residual)
         w2 = np.diag(1 / eigs).T.dot(w1)

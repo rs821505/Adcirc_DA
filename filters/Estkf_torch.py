@@ -26,14 +26,16 @@ class estkf_torch(base_filter_torch):
             state (analysis/posterior) vector, posterior covariance
         """
 
+        self.parameters_torch(
+            self.state_forecast, self.model_observations, self.observations
+        )
+
         self.get_shapes()
-        self.r = 0.5 * torch.ones(self.ny)
+        self.obs_covariance = 0.5 * torch.ones(self.ny)
         self.get_means()
 
         wa, cv = self._forecast()
-        state_analysis = self._analysis(
-            self.state_mean, self.centered_state_forecasts, wa
-        )
+        state_analysis = self._analysis(wa)
 
         return state_analysis.numpy(), cv.numpy()
 

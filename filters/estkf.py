@@ -72,18 +72,18 @@ class estkf(base_filter):
         hl = self.model_observations.dot(projection_matrix)
         b1 = np.diag(1 / self.obs_covariance).dot(hl)
         c1 = (self.ne - 1) * np.identity(self.ne - 1)
-        c2 = self.inf_fact * c1 + hl.t.dot(b1)
+        c2 = self.inf_fact * c1 + hl.T.dot(b1)
 
         # EVD of c2, assumed symmetric
         eigs, u = np.linalg.eigh(c2)
 
-        d1 = b1.t.dot(residual)
-        d2 = u.t.dot(d1)
+        d1 = b1.T.dot(residual)
+        d2 = u.T.dot(d1)
         d3 = d2 / eigs
-        t = u.dot(np.diag(1 / np.sqrt(eigs)).dot(u.t))  # symmetric square root
+        t = u.dot(np.diag(1 / np.sqrt(eigs)).dot(u.T))  # symmetric square root
 
         wm = u.dot(d3)  # mean weight
-        wp = t.dot(projection_matrix.t * np.sqrt((self.ne - 1)))  # perturbation weight
+        wp = t.dot(projection_matrix.T * np.sqrt((self.ne - 1)))  # perturbation weight
         w = wm[:, None] + wp  # total weight matrix + projection matrix transform
         wa = projection_matrix.dot(w)
 

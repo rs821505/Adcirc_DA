@@ -24,8 +24,8 @@ class senkf(base_filter):
         """
         self.get_shapes()
         self.obs_covariance = 0.5 * np.ones(self.ny)
-        self.means()
-        self.obs_cov_mat = self._obs_error_mat()
+        self.get_means()
+        self.obs_cov_mat = self.observation_cov_matrix()
 
         residual_covariance, residual = self._forecast()
         state_analysis = self._analysis(residual_covariance, residual)

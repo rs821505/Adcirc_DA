@@ -3,7 +3,7 @@ import numpy as np
 from dataclasses import dataclass, field
 
 
-@dataclass(frozen=True, order=True)
+@dataclass(order=True)
 class base_filter_torch:
     """
     Base filter class representing a single data assimilation step
@@ -32,6 +32,22 @@ class base_filter_torch:
         """
         return torch.as_tensor(nparray, device=self.device, dtype=torch.float32)
 
+    def parameters_torch(self, state_forecast, model_observations, observations):
+        """Converts input parameters to torch tensors
+
+        Parameters
+        ----------
+        state_forecast : np.ndarray
+            state forecast vector
+        model_observations : np.ndarray
+            model observation vector
+        observations : np.ndarray
+            gauge observation vector
+        """
+        self.state_forecast = self.to_torch(state_forecast.copy())
+        self.model_observations = self.to_torch(model_observations.copy())
+        self.observations = self.to_torch(observations)
+
     def get_shapes(self):
         """Get shapes for data assimilation
 
@@ -51,13 +67,13 @@ class base_filter_torch:
         """Assigns state ensemble mean, observation mean, and the centered state and observation matrices"""
 
         self.state_mean = self.state_forecast.mean(axis=1)
-        self.observation_mean = self.model_observations.mean(axis=1)
+        self.model_observation_mean = self.model_observations.mean(axis=1)
 
         self.centered_state_forecasts = self.state_forecast.sub(
             self.state_mean.unsqueeze_(1)
         )
-        self.centered_observations = (
-            self.observations.sub(self.observation_mean.unsqueeze_(1)),
+        self.centered_observations = self.model_observations.sub(
+            self.model_observation_mean.unsqueeze_(1)
         )
 
     def _obs_error_mat(self):

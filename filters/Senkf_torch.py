@@ -24,8 +24,11 @@ class senkf_torch(base_filter_torch):
         torch.Tensor
             state (analysis/posterior) vector
         """
+        self.parameters_torch(
+            self.state_forecast, self.model_observations, self.observations
+        )
         self.get_shapes()
-        self.r = 0.5 * torch.ones(self.ny)
+        self.obs_covariance = 0.5 * torch.ones(self.ny)
         self.obs_cov_mat = self._obs_error_mat()
         self.get_means()
 
@@ -52,7 +55,7 @@ class senkf_torch(base_filter_torch):
         residual_covariance = forecast_error_covariance.add(self.obs_cov_mat)
 
         perturbed_observations = torch.randn(
-            (self.ny, self.ne), dtype=torch.float64
+            (self.ny, self.ne), dtype=torch.float32
         ) * torch.sqrt(self.obs_covariance).unsqueeze_(1)
 
         residual = self.observations.unsqueeze_(1).add(
@@ -76,7 +79,6 @@ class senkf_torch(base_filter_torch):
         torch.Tensor
             state analysis/aposterior vector
         """
-
         e = self.centered_observations.t().matmul(
             torch.linalg.solve(residual_covariance, residual)
         )
