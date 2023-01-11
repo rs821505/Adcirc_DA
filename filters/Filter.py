@@ -5,7 +5,7 @@ import numpy as np
 
 
 @dataclass(order=True)
-class base_filter:
+class Filter:
     """Base filter class for ensemble kalman filter algorithm"""
 
     state_forecast: np.ndarray = None

@@ -1,15 +1,15 @@
 import numpy as np
-from .Base_Filter import base_filter
+import Filter
 
 
-class senkf(base_filter):
+class Senkf(Filter):
     """Stochastic Ensemble Kalman Filter
     Implementation adapted from pseudocode description in
     "State-of-the-art stochastic data assimialation methods" by Vetra-Carvalho et al. (2018),
 
     Parameters
     ----------
-    base_filter : object
+    Filter : object
         parent class to all ensemble type filters in the directory
     """
 

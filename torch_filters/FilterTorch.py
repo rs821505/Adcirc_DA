@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 
 @dataclass(order=True)
-class base_filter_torch:
+class FilterTorch:
     """
     Base filter class representing a single data assimilation step
     Class contaings methods shared by all filters.

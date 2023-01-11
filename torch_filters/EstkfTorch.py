@@ -1,9 +1,9 @@
 import torch
 import numpy as np
-from .Base_Filter_Torch import base_filter_torch
+import FilterTorch
 
 
-class estkf_torch(base_filter_torch):
+class EstkfTorch(FilterTorch):
     """Error-subspace transform Kalman Filter
 
     Pytorch implementation adapted from pseudocode description in
@@ -12,7 +12,7 @@ class estkf_torch(base_filter_torch):
 
     Parameters
     ----------
-    base_filter_torch : object
+    FilterTorch : object
         parent class to all ensemble type filters in the directory
     """
 

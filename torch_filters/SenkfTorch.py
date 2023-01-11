@@ -1,17 +1,17 @@
 import torch
 import numpy as np
 import time
-from .Base_Filter_Torch import base_filter_torch
+import FilterTorch
 
 
-class senkf_torch(base_filter_torch):
+class SenkfTorch(FilterTorch):
     """Stochastic Ensemble Kalman Filter
     Implementation adapted from pseudocode description in
     "State-of-the-art stochastic data assimialation methods" by Vetra-Carvalho et al. (2018),
 
     Parameters
     ----------
-    base_filter : object
+    Filter : object
         parent class to all ensemble type filters in the directory
     """
 

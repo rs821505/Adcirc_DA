@@ -3,12 +3,12 @@ import torch_filters
 
 # from filters import test_imp
 
-# from Ensrf import ensrf
+# from Ensrf import Ensrf
 
 
 def main():
-    filters.senkf()
-    torch_filters.ensrf_torch()
+    filters.Senkf()
+    torch_filters.EnsrfTorch()
 
     print("import successful")
 

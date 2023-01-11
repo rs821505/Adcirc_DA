@@ -1,8 +1,8 @@
 import numpy as np
-from .Base_Filter import base_filter
+import Filter
 
 
-class estkf(base_filter):
+class Estkf(Filter):
     """Error-subspace transform Kalman Filter
 
     Implementation adapted from pseudocode description in
@@ -11,7 +11,7 @@ class estkf(base_filter):
 
     Parameters
     ----------
-    base_filter : object
+    Filter : object
         parent class to all ensemble type filters in the directory
     """
 

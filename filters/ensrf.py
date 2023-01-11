@@ -1,15 +1,15 @@
 import numpy as np
-from .Base_Filter import base_filter
+import Filter
 
 
-class ensrf(base_filter):
+class Ensrf(Filter):
     """Implementation adapted from pseudocode description in
     "State-of-the-art stochastic data assimialation methods" by Vetra-Carvalho et al. (2018),
     algorithm 9, see section 5.6. Pseudocode has some errors, eg. in step 7 it should be sqrt(Lambda).
 
     Parameters
     ----------
-    base_filter : object
+    Filter : object
         parent class to all ensemble type filters in the directory
     """
 
